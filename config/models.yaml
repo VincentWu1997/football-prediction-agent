@@ -2,7 +2,8 @@
 # 所有后端统一走 OpenAI 兼容协议 /v1/chat/completions。
 
 defaults:
-  # Qwen3 默认开启思考模式，会显著拖慢 fast 路由，必须显式关闭
+  # 实测 Ollama 0.34.2 + qwen3:4b：发送 enable_thinking=false 反而拉长推理，
+  # 默认行为（思考 ~120 tokens 后作答）最快；仅置 true 时才显式开启。
   enable_thinking: false
   request_timeout_s: 60
 
@@ -16,7 +17,7 @@ backends:
     api_key: EMPTY
     model: qwen3:4b
     timeout_s: 30
-    max_tokens: 512
+    max_tokens: 1024
     temperature: 0.3
   precise:
     provider: ollama
