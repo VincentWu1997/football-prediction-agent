@@ -1,0 +1,26 @@
+# 最小基础设施：只有 PostgreSQL16 + pgvector。
+# Ollama 在 Mac 上原生安装（Metal 加速），不容器化，避免套娃。
+# 应用进程（FastAPI / MCP Servers / Streamlit）均在本机虚拟环境运行。
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: sports-agent-pg
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-sports}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sports}
+      POSTGRES_DB: ${POSTGRES_DB:-sports}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # 首次初始化时自动建扩展和业务表（仅对空数据卷生效）
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sports} -d ${POSTGRES_DB:-sports}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  pgdata:

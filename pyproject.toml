@@ -1,0 +1,66 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "sports-agent"
+version = "0.1.0"
+description = "推理感知型足球赛事预测 Agent：复杂度路由 + ReAct 多工具编排 + 可回测预测"
+requires-python = ">=3.11"
+dependencies = [
+    # 配置与数据
+    "pydantic>=2.7",
+    "pydantic-settings>=2.3",
+    "pyyaml>=6.0",
+    "pandas>=2.2",
+    "SQLAlchemy>=2.0",
+    "psycopg2-binary>=2.9",
+    # Agent 与推理
+    "langgraph>=0.2",
+    "langchain-core>=0.3",
+    "openai>=1.40",
+    "httpx>=0.27",
+    # API
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "sse-starlette>=2.1",
+    # 统计模型（Dixon-Coles 数值求解）
+    "scipy>=1.13",
+]
+
+[project.optional-dependencies]
+# W3 起安装
+ml = [
+    "scikit-learn>=1.5",
+    "xgboost>=2.0",
+]
+# W6 起安装：三个 MCP Server
+mcp = [
+    "fastmcp>=2.0",
+]
+# W9 起安装
+ui = [
+    "streamlit>=1.38",
+]
+# 可选：本地 bge-m3；默认走 Ollama /v1/embeddings，避免引入 torch
+rag-local = [
+    "sentence-transformers>=3.0",
+]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/sports_agent"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src", "data/scripts"]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

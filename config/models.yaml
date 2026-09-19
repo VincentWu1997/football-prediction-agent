@@ -1,0 +1,76 @@
+# 推理后端注册表 —— 换 Ollama / vLLM / SGLang 只改这里，Agent 代码不动。
+# 所有后端统一走 OpenAI 兼容协议 /v1/chat/completions。
+
+defaults:
+  # Qwen3 默认开启思考模式，会显著拖慢 fast 路由，必须显式关闭
+  enable_thinking: false
+  request_timeout_s: 60
+
+backends:
+  # ---- 本地（Mac mini + Ollama, Metal）----
+  # 拉取：ollama pull qwen3:4b ；ollama pull qwen3:8b（Q4_K_M 默认）
+  # precise 想要 Q6_K 时改用 qwen3:8b-q6_K（先用 ollama show 确认 tag）
+  fast:
+    provider: ollama
+    base_url: http://localhost:11434/v1
+    api_key: EMPTY
+    model: qwen3:4b
+    timeout_s: 30
+    max_tokens: 512
+    temperature: 0.3
+  precise:
+    provider: ollama
+    base_url: http://localhost:11434/v1
+    api_key: EMPTY
+    model: qwen3:8b
+    timeout_s: 120
+    max_tokens: 2048
+    temperature: 0.6
+
+  # ---- 云端 vLLM/SGLang（W7 按量 GPU，压测/生产形态）----
+  # 启动示例：vllm serve Qwen/Qwen3-8B-AWQ --port 8000
+  cloud-awq:
+    provider: vllm
+    base_url: http://REPLACE_WITH_CLOUD_HOST:8000/v1
+    api_key: EMPTY
+    model: Qwen/Qwen3-8B-AWQ
+    timeout_s: 120
+    max_tokens: 2048
+    temperature: 0.6
+    enabled: false
+  # sglang 与 vllm 同构（OpenAI 兼容），E4 实验时启用
+  cloud-sglang:
+    provider: sglang
+    base_url: http://REPLACE_WITH_CLOUD_HOST:30000/v1
+    api_key: EMPTY
+    model: Qwen/Qwen3-8B-AWQ
+    timeout_s: 120
+    max_tokens: 2048
+    temperature: 0.6
+    enabled: false
+
+# 任务层级预算：Planner 只决定层级与预算，工具选择交给 ReAct 循环
+levels:
+  L1:
+    route: fast
+    max_tool_iters: 2
+    allow_simulation: false
+  L2:
+    route: fast
+    max_tool_iters: 4
+    allow_simulation: false
+  L3:
+    route: precise
+    max_tool_iters: 8
+    allow_simulation: false
+  L4:
+    route: precise
+    max_tool_iters: 10
+    allow_simulation: true
+
+rag:
+  # 默认通过 Ollama embeddings 接口调用（ollama pull bge-m3），不在 Python 侧装 torch
+  embedding_provider: ollama
+  embedding_model: bge-m3
+  dimensions: 1024
+  top_k: 5

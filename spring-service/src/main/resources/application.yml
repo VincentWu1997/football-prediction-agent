@@ -1,0 +1,32 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: sports-bff
+  # 最小版鉴权（演示）。W8 之后可替换为 JWT
+  security:
+    user:
+      name: demo
+      password: demo123
+  ai:
+    mcp:
+      client:
+        # 骨架阶段允许 MCP Server 未启动时 BFF 照常启动（健康检查不被阻断）。
+        # W8 联调 /api/tools 时：先启动三个 Python MCP Server，再把本项改为 true。
+        initialized: false
+        request-timeout: 10s
+        # 配置项前缀与端点以 Spring AI 官方文档为准：
+        # spring.ai.mcp.client.streamable-http.connections.<name>.url，endpoint 默认 /mcp
+        streamable-http:
+          connections:
+            data-server:
+              url: http://localhost:8001
+            prediction-server:
+              url: http://localhost:8002
+            knowledge-server:
+              url: http://localhost:8003
+
+logging:
+  level:
+    io.modelcontextprotocol: INFO

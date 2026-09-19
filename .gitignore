@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+
+# 环境变量（含密钥）
+.env
+
+# 数据与模型产物（体积大，不入库；目录由 .gitkeep 保留）
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+models/*
+!models/.gitkeep
+
+# benchmark 原始结果由脚本生成，但需要入库时去掉下面注释（项目纪律：图表只由这些数据生成）
+# benchmarks/results/*
+
+# IDE / OS
+.idea/
+.DS_Store
+
+# 原始方案文档（不入仓）
+*.docx
+
+# Java / Maven
+spring-service/target/
+*.class
