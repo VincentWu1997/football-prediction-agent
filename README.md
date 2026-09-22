@@ -83,7 +83,7 @@ README 与简历中所有性能/质量数字必须来自 `benchmarks/results/` �
 - [x] W2 walk-forward 脚手架 + 赔率去水 baseline（LogLoss/Brier/RPS，详见 `benchmarks/results/w2/`）
 - [x] W3 XGBoost 主模型 + 温度/isotonic 校准 + flat-stake 投注回测（详见 `benchmarks/results/w3/`）
 - [x] W4 蒙特卡洛 + 本地推理双档 + FastAPI（详见 `benchmarks/results/w4/`）
-- [ ] W5 bge-m3 + pgvector RAG（recall@5 / 溯源）
+- [x] W5 bge-m3 + pgvector RAG（详见 `benchmarks/results/w5/`）（recall@5 / 溯源）
 - [ ] W6 三个 MCP Server + Planner + ReAct 端到端
 - [ ] W7 云 GPU 实测 vLLM AWQ/GPTQ/FP8 + SGLang RadixAttention（预算 ¥50）
 - [ ] W8 Spring AI 最小 BFF（鉴权 + MCP client 调通）

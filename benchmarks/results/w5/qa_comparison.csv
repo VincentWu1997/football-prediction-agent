@@ -1,0 +1,63 @@
+query,mode,answer,hit_key,score
+Villarreal 最近比赛采用什么阵型？,plain,信息不足,Villarreal,0
+Villarreal 最近比赛采用什么阵型？,rag,信息不足,Villarreal,0
+Leganes 最近一场比赛看点是什么？,plain,信息不足,Leganes,0
+Leganes 最近一场比赛看点是什么？,rag,信息不足,Leganes,0
+RB Leipzig 教练赛前说了什么？,plain,信息不足,RB Leipzig,0
+RB Leipzig 教练赛前说了什么？,rag,信息不足,RB Leipzig,0
+Ath Bilbao 哪位球员受伤？预计缺阵多久？,plain,信息不足,Ath Bilbao,0
+Ath Bilbao 哪位球员受伤？预计缺阵多久？,rag,"信息不足
+
+在提供的5个参考资料中，没有任何一条信息涉及Ath Bilbao（毕尔巴鄂竞技）的球员受伤情况或缺阵信息。参考资料仅包含Lecce、West Ham、Liverpool、Empoli、Juventus、Brentford和Wolfsburg等球队的相关内容，没有Ath Bilbao的任何信息。因此，无法基于当前提供的资料回答该问题。",Ath Bilbao,1
+Osasuna 哪位球员受伤？预计缺阵多久？,plain,信息不足,Osasuna,0
+Osasuna 哪位球员受伤？预计缺阵多久？,rag,"信息不足
+
+在提供的参考资料中，没有任何一条信息涉及Osasuna俱乐部的球员受伤情况。参考资料[1]至[5]分别涉及Aston Villa、Villarreal、Tottenham和Montpellier的伤病、战术或新闻内容，但没有提及Osasuna的任何球员受伤信息。因此，无法基于现有资料回答该问题。",Osasuna,1
+Rennes 哪位球员受伤？预计缺阵多久？,plain,信息不足,Rennes,0
+Rennes 哪位球员受伤？预计缺阵多久？,rag,信息不足,Rennes,0
+Nantes 最近比赛采用什么阵型？,plain,信息不足,Nantes,0
+Nantes 最近比赛采用什么阵型？,rag,"信息不足
+
+在提供的参考资料中，没有关于Nantes最近比赛采用阵型的任何信息。参考资料[2]（2025-05-09）提到了""Auxerre 需要在防守反击和阵地战之间找到平衡，才能在主场争取主动""，并指出""面对Nantes的防守体系""，但这里Nantes仅作为对手的防守体系被提及，没有说明Nantes自身最近比赛的阵型。其他参考资料均涉及Lille、Auxerre、Fiorentina、Unio",Nantes,1
+Mainz 最近比赛采用什么阵型？,plain,信息不足,Mainz,0
+Mainz 最近比赛采用什么阵型？,rag,信息不足,Mainz,0
+Paris SG 教练赛前说了什么？,plain,信息不足,Paris SG,0
+Paris SG 教练赛前说了什么？,rag,"信息不足
+
+（在提供的参考资料中，没有任何一条信息涉及Paris SG（巴黎圣日耳曼）教练的赛前发言。参考资料仅包含Torino、Augsburg、Everton和Ipswich等球队的相关消息，但没有Paris SG的任何内容。）",Paris SG,1
+Lens 哪位球员受伤？预计缺阵多久？,plain,信息不足,Lens,0
+Lens 哪位球员受伤？预计缺阵多久？,rag,"信息不足
+
+理由：在提供的所有参考资料中，没有任何一条信息提及Lens球队的球员受伤情况。参考资料[5]中提到的是Lille（法国俱乐部）的赛前新闻发布会，但内容仅涉及球队准备和主场优势，未提及任何球员受伤或缺阵信息。所有其他参考资料均涉及Freiburg、Valladolid、Alaves、Villarreal和Chelsea等球队，与Lens无关。因此，基于当前提供的信息，无法回答Lens哪位",Lens,1
+Tottenham 教练赛前说了什么？,plain,信息不足,Tottenham,0
+Tottenham 教练赛前说了什么？,rag,信息不足,Tottenham,0
+RB Leipzig 哪位球员受伤？预计缺阵多久？,plain,信息不足,RB Leipzig,0
+RB Leipzig 哪位球员受伤？预计缺阵多久？,rag,"信息不足
+
+在提供的参考资料中，没有关于RB Leipzig任何球员受伤的信息。参考资料中提到了Parma（[3]）和Brighton（[5]）的球员受伤情况，但没有涉及RB Leipzig的伤病消息。因此，无法回答RB Leipzig哪位球员受伤及预计缺阵多久的问题。",RB Leipzig,1
+Arsenal 最近比赛采用什么阵型？,plain,信息不足,Arsenal,0
+Arsenal 最近比赛采用什么阵型？,rag,信息不足,Arsenal,0
+Wolves 哪位球员受伤？预计缺阵多久？,plain,信息不足,Wolves,0
+Wolves 哪位球员受伤？预计缺阵多久？,rag,"信息不足
+
+在提供的参考资料中，没有关于Wolves（狼队，即Wolverhampton Wanderers FC）任何球员受伤的信息。参考资料[5]提到了Sociedad（西班牙球队）的MF15和MF09脚踝扭伤，但与Wolves无关。其他参考资料均未涉及Wolves球队的伤病情况。因此，基于现有信息无法回答Wolves哪位球员受伤及预计缺阵时长。",Wolves,1
+Nantes 哪位球员受伤？预计缺阵多久？,plain,信息不足,Nantes,0
+Nantes 哪位球员受伤？预计缺阵多久？,rag,"信息不足
+
+在提供的所有参考资料中，没有任何一条信息提及Nantes（南特）俱乐部的球员受伤情况。参考资料[1]至[5]分别涉及Udinese、Tottenham、Betis、Verona和Brighton/Bournemouth等球队的伤病或赛前信息，但均未包含Nantes相关的内容。因此，无法基于现有信息回答Nantes哪位球员受伤及预计缺阵时长的问题。",Nantes,1
+Bologna 哪位球员受伤？预计缺阵多久？,plain,信息不足,Bologna,0
+Bologna 哪位球员受伤？预计缺阵多久？,rag,"信息不足
+
+在提供的所有参考资料中，没有关于Bologna（博洛尼亚）球员受伤的任何信息。参考资料[1]至[5]分别涉及Arsenal、Nott'm Forest/Bournemouth、Tottenham、Napoli和Nantes的训练消息或赛前综述，但均未提及Bologna的球员伤情情况。因此，无法回答Bologna哪位球员受伤及预计缺阵时长的问题。",Bologna,1
+M'gladbach 哪位球员受伤？预计缺阵多久？,plain,信息不足,M'gladbach,0
+M'gladbach 哪位球员受伤？预计缺阵多久？,rag,"信息不足
+
+在提供的参考资料中，没有关于M'gladbach（门兴格拉德巴赫）任何球员受伤的信息。参考资料中提到了Celta、Brighton、Venezia、Verona、Bochum和Hoffenheim等球队的伤病情况，但没有M'gladbach的相关内容。因此，无法回答该问题。",M'gladbach,1
+Empoli 最近一场比赛看点是什么？,plain,信息不足,Empoli,0
+Empoli 最近一场比赛看点是什么？,rag,信息不足,Empoli,0
+Ath Bilbao 最近一场比赛看点是什么？,plain,信息不足,Ath Bilbao,0
+Ath Bilbao 最近一场比赛看点是什么？,rag,信息不足,Ath Bilbao,0
+Bournemouth 教练赛前说了什么？,plain,信息不足,Bournemouth,0
+Bournemouth 教练赛前说了什么？,rag,"信息不足
+
+在提供的参考资料中，没有任何一条信息涉及Bournemouth（伯恩茅斯）教练的赛前言论。参考资料[1]至[5]分别包含博洛尼亚、门兴格拉德巴赫、多特蒙德、诺丁汉森林vs狼队、摩纳哥等球队的伤病消息或比赛综述，但均未提及Bournemouth的任何内容。因此，无法基于现有信息回答该问题。",Bournemouth,1
