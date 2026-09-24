@@ -72,26 +72,35 @@ with col_trace:
         st.caption("发送一条消息后，此处展示 Planner/LLM/工具调用序列与耗时。")
     else:
         for i, step in enumerate(trace):
-            node = step.get("node", "?")
-            elapsed = step.get("elapsed_s", "?")
-            with st.expander(f"步骤 {i+1}：{node}  ({elapsed}s)", expanded=i < 3):
-                # 工具调用信息
-                if step.get("tool_calls"):
-                    for tc in step["tool_calls"]:
-                        st.write(f"🔧 **{tc.get('name', '?')}**")
-                        if tc.get("args"):
-                            st.json(tc["args"], expanded=False)
-                        if tc.get("result_summary"):
-                            st.caption(tc["result_summary"])
-                # LLM 输出摘要
-                if step.get("llm_output"):
-                    st.text(step["llm_output"][:200] + "…")
-                # token 用量
-                if step.get("tokens"):
-                    st.caption(f"Tokens: {step['tokens']}")
-                # 推理后端
-                if step.get("model"):
-                    st.caption(f"模型: {step['model']}")
+            kind = step.get("kind", "?")
+            name = step.get("name", "?")
+            latency = step.get("latency_ms", 0)
+            detail = step.get("detail") or {}
+            with st.expander(f"步骤 {i+1}：[{kind}] {name}  ({latency}ms)", expanded=i < 3):
+                if kind == "planner":
+                    st.write(f"路由：**{detail.get('level', '?')} → {detail.get('route', '?')}**")
+                    if detail.get("reason"):
+                        st.caption(detail["reason"])
+                elif kind == "llm":
+                    calls = detail.get("tool_calls") or []
+                    if calls:
+                        st.write("决定调用工具：" + ", ".join(f"**{c}**" for c in calls))
+                    else:
+                        st.write("生成最终回答")
+                    st.caption(
+                        f"finish={detail.get('finish_reason')} · "
+                        f"prompt={detail.get('prompt_tokens')} tok · "
+                        f"completion={detail.get('completion_tokens')} tok"
+                    )
+                elif kind == "tool":
+                    if detail.get("args"):
+                        st.code(detail["args"], language="json")
+                    if detail.get("error"):
+                        st.error(f"工具错误：{detail['error']}")
+                    elif detail.get("result_keys"):
+                        st.caption("返回字段：" + ", ".join(detail["result_keys"]))
+                else:
+                    st.json(detail, expanded=False)
 
 # ---- 底栏：预测账本看板 ----
 st.divider()

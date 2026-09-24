@@ -29,11 +29,12 @@ DEFAULT_MCP_URLS = {
 # ============ 本地直调实现（mode="local"，ReAct/测试共用） ============
 
 
-def _local_query_standings(league: str, season: str) -> dict:
-    from sports_agent.data.queries import query_standings
+def _local_query_standings(league: str, season: str | None = None) -> dict:
+    from sports_agent.data.queries import latest_season, query_standings
 
-    rows = query_standings(league, season)
-    return {"league": league, "season": season, "n_teams": len(rows), "standings": rows}
+    resolved = season or latest_season(league)
+    rows = query_standings(league, resolved)
+    return {"league": league, "season": resolved, "n_teams": len(rows), "standings": rows}
 
 
 def _local_query_recent_form(team: str, n: int = 5) -> dict:
@@ -116,7 +117,7 @@ _spec(
     "query_standings",
     _local_query_standings,
     "查询某联赛某赛季积分榜。league 为 football-data.co.uk 代码（E0/SP1/D1/I1/F1），"
-    "season 为 4 位起始年份+2 位终止年份（如 2425）。"
+    "season 为 4 位起始年份+2 位终止年份（如 2425），省略时自动使用最新赛季（推荐）。"
     "返回 {rank, team, played, won, drawn, lost, gf, ga, gd, points} 列表。",
 )
 _spec(

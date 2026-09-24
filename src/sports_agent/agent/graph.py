@@ -25,6 +25,7 @@ ReAct 循环（react 节点内，使用 OpenAI 原生 tool_calls）：
 
 from __future__ import annotations
 
+import datetime
 import json
 import time
 from typing import Any
@@ -39,10 +40,13 @@ from sports_agent.inference.client import InferenceClient
 _SYSTEM_PROMPT = (
     "你是足球赛事分析助手。只能基于工具返回的数据与知识库内容作答，"
     "不得编造伤停、比分或概率；引用事实时标注来源（doc_source 或比赛日期）。\n"
+    "当前日期：{today}。数据库存有至 {latest_season_hint} 赛季的完整数据。\n"
     "当前任务层级：{level}，工具调用上限：{max_iters} 次。\n"
     "工具白名单：{allowlist}。\n"
     "强制规则：\n"
     "- 涉及单场胜负平预测（如'谁会赢'）时，必须先调用 predict_match 工具获取真实概率，再回答；\n"
+    "- 调用 query_standings 时**省略 season 参数**（工具会自动使用最新赛季），"
+    "除非用户明确要求历史赛季；禁止凭记忆猜赛季代码；\n"
     "- 需要伤停/战术/采访等非结构化信息时调用 search_knowledge；\n"
     "- L4 赛季模拟才允许 simulate_season；\n"
     "- 积分榜/战绩/赔率走 query_standings / query_recent_form / query_h2h / query_odds。\n"
@@ -77,6 +81,17 @@ _LEVEL_TOOLS: dict[str, list[str]] = {
         "simulate_season",
     ],
 }
+
+
+def _season_hint() -> str:
+    """从库中取最新赛季代码注入 prompt；DB 不可用时给通用提示。"""
+    try:
+        from sports_agent.data.queries import latest_season
+
+        s = latest_season("E0")
+        return s or "最新"
+    except Exception:
+        return "最新"
 
 
 def _build_registry() -> tuple[Planner, InferenceClient, dict]:
@@ -123,6 +138,8 @@ def _build_react_node(planner, inference, tools_by_name):
                 {
                     "role": "system",
                     "content": _SYSTEM_PROMPT.format(
+                        today=datetime.date.today().isoformat(),
+                        latest_season_hint=_season_hint(),
                         level=state["level"],
                         max_iters=state["max_tool_iters"],
                         allowlist=", ".join(allowlist),
