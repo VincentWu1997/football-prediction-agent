@@ -22,7 +22,7 @@ Streamlit ── Spring AI BFF(最小版) ── FastAPI Agent Runtime
 - Python 3.11+
 - Docker（仅用于 postgres+pgvector）
 - [Ollama](https://ollama.com)（macOS 原生，Metal 加速）
-- JDK 17+、Maven（仅 spring-service）
+- JDK 21、Maven 3.9（仅 spring-service）
 
 ## 快速开始
 
@@ -77,15 +77,27 @@ python -c "from sports_agent.data.queries import query_standings; print(query_st
 pytest tests/test_agent_w6.py -q
 ```
 
-### Spring AI BFF（W8，最小版）
+### Spring AI BFF（W8）
 
-先启动上面三个 MCP Server（BFF 启动时会初始化连接），再：
+Spring Boot 3.4 + Spring AI 1.0 + JDK 21，最小版企业服务层。
 
 ```bash
 cd spring-service && mvn spring-boot:run
-# http://localhost:8080/api/health （basic auth: demo / demo123）
-# http://localhost:8080/api/tools  → 列出经 MCP 发现的全部工具
+# 健康检查（公开）：curl http://localhost:8080/api/health
+# 工具列表（需 API Key）：curl -H 'X-API-Key: demo-key-001' http://localhost:8080/api/tools
+# 预测账本：curl -H 'X-API-Key: demo-key-001' 'http://localhost:8080/api/predictions?summary=true'
+# 分析透传：curl -X POST -H 'X-API-Key: demo-key-001' -H 'Content-Type: application/json' \
+#   -d '{"query":"英超积分榜"}' http://localhost:8080/api/analyze
+# Actuator：curl http://localhost:8080/actuator/health
 ```
+
+| 模块 | 实现 |
+|---|---|
+| 对外 API | `/api/analyze`（透传 FastAPI）、`/api/predict`、`/api/predictions`（pred_ledger）、`/api/tools`（MCP） |
+| 鉴权 | API Key（`X-API-Key` 头），Stateless |
+| 限流 | Bucket4j 令牌桶，20 req/min/IP |
+| MCP Client | `spring-ai-starter-mcp-client` Streamable HTTP 连三个 Python Server |
+| 可观测 | Actuator（health/metrics），HikariPool 连 PostgreSQL |
 
 ## 数据纪律（README 数字规则）
 
@@ -100,7 +112,7 @@ README 与简历中所有性能/质量数字必须来自 `benchmarks/results/` �
 - [x] W5 bge-m3 + pgvector RAG（详见 `benchmarks/results/w5/`）（recall@5 / 溯源）
 - [x] W6 三个 MCP Server + Planner + ReAct 端到端（详见 `benchmarks/results/w6/`）（规则版路由准确率、混淆矩阵、L1-L4 端到端 trace）
 - [ ] W7 云 GPU 实测 vLLM AWQ/GPTQ/FP8 + SGLang RadixAttention（预算 ¥50）
-- [ ] W8 Spring AI 最小 BFF（鉴权 + MCP client 调通）
+- [x] W8 Spring AI BFF（鉴权 + 限流 + MCP client + 可观测，5 项烟测通过）
 - [ ] W9 Streamlit trace 可视化 + 预测账本看板
 - [ ] W10 README 实测数据、演示视频、测试收口
 

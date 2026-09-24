@@ -4,20 +4,20 @@ server:
 spring:
   application:
     name: sports-bff
-  # 最小版鉴权（演示）。W8 之后可替换为 JWT
-  security:
-    user:
-      name: demo
-      password: demo123
+  # PostgreSQL（pred_ledger 查询）
+  datasource:
+    url: jdbc:postgresql://localhost:5432/sports
+    username: sports
+    password: sports
+    hikari:
+      maximum-pool-size: 4
   ai:
     mcp:
       client:
-        # 骨架阶段允许 MCP Server 未启动时 BFF 照常启动（健康检查不被阻断）。
-        # W8 联调 /api/tools 时：先启动三个 Python MCP Server，再把本项改为 true。
+        # 骨架阶段允许 MCP Server 未启动时 BFF 照常启动。
+        # 联调 /api/tools 时：先启动三个 Python MCP Server，再把本项改为 true。
         initialized: false
         request-timeout: 10s
-        # 配置项前缀与端点以 Spring AI 官方文档为准：
-        # spring.ai.mcp.client.streamable-http.connections.<name>.url，endpoint 默认 /mcp
         streamable-http:
           connections:
             data-server:
@@ -27,6 +27,28 @@ spring:
             knowledge-server:
               url: http://localhost:8003
 
+# BFF 自定义配置
+bff:
+  # Python FastAPI runtime 地址
+  python-runtime-url: http://localhost:9000
+  # API Key 鉴权（演示用，生产换 JWT/OAuth）
+  api-keys:
+    - demo-key-001
+  # 限流：每分钟 20 请求/IP
+  rate-limit:
+    capacity: 20
+    refill-per-minute: 20
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
 logging:
   level:
+    com.example.sportsbff: INFO
     io.modelcontextprotocol: INFO
