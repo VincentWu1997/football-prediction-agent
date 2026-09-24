@@ -1,8 +1,8 @@
-"""嵌入客户端：bge-m3 via Ollama /v1/embeddings（默认），或 Mock（测试用）。
+"""嵌入客户端：bge-m3 via Ollama 原生 /api/embeddings（默认），或 Mock（测试用）。
 
 设计要点：
-- 复用 openai SDK 调 Ollama，与 inference/client.py 同构，不引入 torch；
-- 所有实现返回 1024 维、L2 归一化的 float 向量；
+- 不引入 torch；走 Ollama 本地服务（不用有 bug 的 /v1/embeddings 端点）；
+- 所有实现返回 1024 维向量；
 - get_embedding_client() 读 config/models.yaml rag 段，RAG_EMBEDDING=mock 可切 Mock。
 """
 
@@ -12,9 +12,8 @@ import os
 import random
 import urllib.error
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor
 from typing import Protocol
-
-from openai import OpenAI
 
 from sports_agent.inference.registry import ModelRegistry
 from sports_agent.settings import settings
@@ -28,41 +27,60 @@ class EmbeddingClient(Protocol):
 
 
 class OllamaEmbeddingClient:
-    """通过 Ollama /v1/embeddings 调 bge-m3；复用 openai SDK。"""
+    """通过 Ollama 原生 /api/embeddings 调 bge-m3。
+
+    注意：不用 OpenAI 兼容的 /v1/embeddings——实测 Ollama 0.34.2 该端点
+    对 bge-m3 会忽略输入、返回常量向量（已确认为 bug）。
+    原生端点一次只接收一条 prompt，用线程并发降低往返开销。
+    """
 
     def __init__(
         self,
         base_url: str | None = None,
         model: str | None = None,
         dimensions: int = 1024,
+        max_workers: int = 8,
     ) -> None:
         reg = ModelRegistry()
         rag = reg.rag_config
-        self._base_url = base_url or f"{settings.ollama_base_url.rstrip('/v1')}/v1"
-        # ollama_base_url 已含 /v1 后缀，直接用
-        self._base_url = base_url or settings.ollama_base_url
+        url = base_url or settings.ollama_base_url
+        # 去掉末尾 /v1，原生端点挂在服务根路径
+        self._root = url.rstrip("/").removesuffix("/v1")
         self._model = model or rag.get("embedding_model", "bge-m3")
         self._dimensions = dimensions
-        self._client = OpenAI(base_url=self._base_url, api_key="EMPTY", timeout=60)
+        self._max_workers = max_workers
+
+    def _embed_one(self, text: str) -> list[float]:
+        payload = json.dumps({"model": self._model, "prompt": text}).encode()
+        req = urllib.request.Request(
+            f"{self._root}/api/embeddings",
+            data=payload,
+            headers={"Content-Type": "application/json"},
+        )
+        with urllib.request.urlopen(req, timeout=120) as resp:
+            data = json.loads(resp.read())
+        if "embedding" not in data:
+            raise RuntimeError(f"Ollama 未返回 embedding: {data}")
+        vec = data["embedding"]
+        if len(vec) != self._dimensions:
+            raise AssertionError(
+                f"嵌入维度 {len(vec)} != 预期 {self._dimensions}；"
+                f"模型 {self._model} 可能不是 bge-m3"
+            )
+        return vec
 
     def embed(self, texts: list[str]) -> list[list[float]]:
         if not texts:
             return []
-        resp = self._client.embeddings.create(model=self._model, input=texts)
-        vectors = [d.embedding for d in resp.data]
-        for v in vectors:
-            assert len(v) == self._dimensions, (
-                f"嵌入维度 {len(v)} != 预期 {self._dimensions}；"
-                f"模型 {self._model} 可能不是 bge-m3"
-            )
-        return vectors
+        with ThreadPoolExecutor(max_workers=self._max_workers) as pool:
+            return list(pool.map(self._embed_one, texts))
 
     def status(self) -> dict:
-        url = f"{self._base_url.rstrip('/')}/models"
+        url = f"{self._root}/api/tags"
         try:
             with urllib.request.urlopen(url, timeout=5) as resp:
                 payload = json.loads(resp.read())
-                ids = [m.get("id") for m in payload.get("data", [])]
+                ids = [m.get("name", "").split(":")[0] for m in payload.get("models", [])]
             return {
                 "provider": "ollama",
                 "model": self._model,

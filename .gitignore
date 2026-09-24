@@ -24,6 +24,7 @@ models/*
 # IDE / OS
 .idea/
 .DS_Store
+.trae/
 
 # 原始方案文档（不入仓）
 *.docx
