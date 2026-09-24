@@ -19,12 +19,25 @@ def _engine() -> Engine:
     return get_engine()
 
 
-def query_standings(league: str, season: str) -> list[dict]:
+def latest_season(league: str) -> str | None:
+    """库中该联赛最新赛季代码（如 2526）。LLM 不知道"现在"是何时，
+    不传 season 时自动取最新，避免默认用到旧赛季数据。"""
+    sql = text("SELECT MAX(season) FROM f_matches WHERE league = :league")
+    with _engine().connect() as conn:
+        return conn.execute(sql, {"league": league}).scalar()
+
+
+def query_standings(league: str, season: str | None = None) -> list[dict]:
     """某联赛某赛季积分榜：按 积分/GD/GF 排序。
 
     league 为 football-data.co.uk 代码（E0/SP1/D1/I1/F1）；
-    season 为 4 位起始年份+末两位终止年份，如 2425。
+    season 为 4 位起始年份+末两位终止年份，如 2425；
+    season 省略时自动取库中最新赛季。
     """
+    if not season:
+        season = latest_season(league)
+        if season is None:
+            return []
     sql = text(
         """
         WITH sides AS (

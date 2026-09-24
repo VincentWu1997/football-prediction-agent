@@ -31,15 +31,19 @@ def server_status() -> dict:
 
 
 @mcp.tool
-def query_standings_tool(league: str, season: str) -> dict:
+def query_standings_tool(league: str, season: str | None = None) -> dict:
     """某联赛某赛季积分榜。
 
     league 为 football-data.co.uk 代码：E0(英超) / SP1(西甲) / D1(德甲) / I1(意甲) / F1(法甲)。
     season 为 4 位起始年份+2 位终止年份，如 2425 表示 2024-25 赛季。
+    season 省略时自动取库中最新赛季（推荐，避免过时数据）。
     返回 {rank, team, played, won, drawn, lost, gf, ga, gd, points} 列表。
     """
-    rows = query_standings(league, season)
-    return {"league": league, "season": season, "n_teams": len(rows), "standings": rows}
+    from sports_agent.data.queries import latest_season
+    resolved = season or latest_season(league)
+    rows = query_standings(league, resolved)
+    return {"league": league, "season": resolved,
+            "n_teams": len(rows), "standings": rows}
 
 
 @mcp.tool
