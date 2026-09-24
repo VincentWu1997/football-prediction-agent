@@ -27,6 +27,17 @@ if ! grep -q "HF_ENDPOINT" "$HOME/.bashrc" 2>/dev/null; then
 fi
 echo "HF_ENDPOINT=$HF_ENDPOINT"
 
+# AutoDL 数据盘 /root/autodl-tmp 容量大，把 HF 缓存放这里，
+# 避免 4 个量化模型（共约 35GB）撑爆系统盘。
+if [ -d /root/autodl-tmp ]; then
+  export HF_HOME="${HF_HOME:-/root/autodl-tmp/hf}"
+  mkdir -p "$HF_HOME"
+  if ! grep -q "HF_HOME" "$HOME/.bashrc" 2>/dev/null; then
+    echo "export HF_HOME=/root/autodl-tmp/hf" >> "$HOME/.bashrc"
+  fi
+  echo "HF_HOME=$HF_HOME"
+fi
+
 echo ""
 echo "=== 3) 安装 vLLM (>=0.8.5) ==="
 # AutoDL 镜像已带 torch；用 --no-build-isolation 避免重装 torch
