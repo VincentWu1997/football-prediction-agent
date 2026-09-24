@@ -16,8 +16,8 @@ backends:
     base_url: http://localhost:11434/v1
     api_key: EMPTY
     model: qwen3:4b
-    timeout_s: 30
-    max_tokens: 1024
+    timeout_s: 240
+    max_tokens: 4096
     temperature: 0.3
   precise:
     provider: ollama

@@ -1,0 +1,200 @@
+[
+  {
+    "level": "L1",
+    "query": "英超最新积分榜",
+    "elapsed_s": 51.41,
+    "plan": {
+      "level": "L1",
+      "route": "fast",
+      "max_tool_iters": 2,
+      "allow_simulation": false,
+      "reason": "关键词命中 L1: 积分榜,积分"
+    },
+    "iters_used": 1,
+    "final_answer": "英超2024-2025赛季最新积分榜（截至当前）：\n\n1. 利物浦（38场）：25胜9平4负，86球-41球，净胜45球，84分  \n2. 阿森纳（38场）：20胜14平4负，69球-34球，净胜35球，74分  \n3. 曼城（38场）：21胜8平9负，72球-44球，净胜28球，71分  \n4. 切尔西（38场）：20胜9平9负，64球-43球，净胜21球，69分  \n5. 纽卡斯尔（38场）：20胜6平12负，68球-47球，净胜21球，66分  \n6. 阿斯顿维拉（38场）：19胜9平10负，58球-51球，净胜7球，66分  \n7. 诺丁汉森林（38场）：19胜8平11负，58球-46球，净胜12球，65分  \n8. 布莱顿（38场）：16胜13平9负，66球-59球，净胜7球，61分  \n9. 布伦特福德（38场）：16胜8平14负，66球-57球，净胜9球，56分  \n10. 福尔摩斯（38场）：15胜9平14负，54球-54球，净胜0球，54分  \n\n（注：数据来源：football-data.co.uk 2024-2025赛季积分榜，2024年10月更新）",
+    "n_tools_called": 1,
+    "tool_names": [
+      "query_standings"
+    ],
+    "inference_summary": {
+      "prompt_tokens": 2844,
+      "completion_tokens": 1411,
+      "latency_ms": 49114,
+      "n_calls": 2
+    },
+    "sources": [],
+    "trace_steps": [
+      {
+        "kind": "planner",
+        "name": "rule_planner",
+        "latency_ms": 0
+      },
+      {
+        "kind": "llm",
+        "name": "qwen3:4b",
+        "latency_ms": 18061
+      },
+      {
+        "kind": "tool",
+        "name": "query_standings",
+        "latency_ms": 2241
+      },
+      {
+        "kind": "llm",
+        "name": "qwen3:4b",
+        "latency_ms": 31053
+      }
+    ]
+  },
+  {
+    "level": "L2",
+    "query": "Man United对Liverpool谁会赢",
+    "elapsed_s": 44.65,
+    "plan": {
+      "level": "L2",
+      "route": "fast",
+      "max_tool_iters": 4,
+      "allow_simulation": false,
+      "reason": "未命中 L1/L3/L4 特定关键词，默认单场快速预测"
+    },
+    "iters_used": 1,
+    "final_answer": "根据预测模型（Dixon-Coles）分析，**利物浦（Liverpool）获胜概率最高（41.59%）**，曼联（Man United）胜率33.55%，平局概率24.85%。蒙特卡洛模拟（20000次）进一步显示：利物浦胜概率区间为[33.07%, 34.38%]，平局[24.09%, 25.29%]，利物浦胜概率区间[40.9%, 42.27%]。  \n\n**结论**：当前预测显示利物浦更可能获胜，但比赛结果存在不确定性（胜率差值仅约8个百分点）。  \n（数据来源：predict_match工具，模型类型：Dixon-Coles）",
+    "n_tools_called": 1,
+    "tool_names": [
+      "predict_match"
+    ],
+    "inference_summary": {
+      "prompt_tokens": 2030,
+      "completion_tokens": 1456,
+      "latency_ms": 43769,
+      "n_calls": 2
+    },
+    "sources": [
+      {
+        "type": "model",
+        "model": "dixon_coles",
+        "as_of": "2026-05-24"
+      }
+    ],
+    "trace_steps": [
+      {
+        "kind": "planner",
+        "name": "rule_planner",
+        "latency_ms": 0
+      },
+      {
+        "kind": "llm",
+        "name": "qwen3:4b",
+        "latency_ms": 24307
+      },
+      {
+        "kind": "tool",
+        "name": "predict_match",
+        "latency_ms": 876
+      },
+      {
+        "kind": "llm",
+        "name": "qwen3:4b",
+        "latency_ms": 19462
+      }
+    ]
+  },
+  {
+    "level": "L3",
+    "query": "详细分析Arsenal对Chelsea，考虑双方伤停",
+    "elapsed_s": 88.21,
+    "plan": {
+      "level": "L3",
+      "route": "precise",
+      "max_tool_iters": 8,
+      "allow_simulation": false,
+      "reason": "关键词命中 L3 强信号: 详细,伤停",
+      "route_final": "fast",
+      "downgrade_reason": "precise 不可用，降级到 fast（available=['fast'])"
+    },
+    "iters_used": 1,
+    "final_answer": "根据当前工具返回的数据，搜索结果中未包含阿森纳（Arsenal）和切尔西（Chelsea）的伤停信息。返回的5条记录均涉及其他球队（Tottenham、West Ham、Ipswich、Newcastle、Everton）的伤停或采访内容，无双方最新伤停动态。  \n\n**信息不足**：当前知识库中无阿森纳/切尔西双方的实时伤停数据（需更精确的搜索关键词或更新数据源）。建议：  \n1. 重新调用 `search_knowledge` 时使用英文队名（如 \"Arsenal injuries Chelsea\"）  \n2. 若需其他维度分析（如近期战绩/交锋记录），可补充调用 `query_recent_form` 或 `query_h2h` 工具  \n\n（注：严格遵循规则，未编造任何伤停信息）",
+    "n_tools_called": 1,
+    "tool_names": [
+      "search_knowledge"
+    ],
+    "inference_summary": {
+      "prompt_tokens": 2810,
+      "completion_tokens": 2733,
+      "latency_ms": 86113,
+      "n_calls": 2
+    },
+    "sources": [],
+    "trace_steps": [
+      {
+        "kind": "planner",
+        "name": "rule_planner",
+        "latency_ms": 0
+      },
+      {
+        "kind": "llm",
+        "name": "qwen3:4b",
+        "latency_ms": 54863
+      },
+      {
+        "kind": "tool",
+        "name": "search_knowledge",
+        "latency_ms": 2086
+      },
+      {
+        "kind": "llm",
+        "name": "qwen3:4b",
+        "latency_ms": 31250
+      }
+    ]
+  },
+  {
+    "level": "L4",
+    "query": "模拟本赛季英超前四的归属概率",
+    "elapsed_s": 142.02,
+    "plan": {
+      "level": "L4",
+      "route": "precise",
+      "max_tool_iters": 10,
+      "allow_simulation": true,
+      "reason": "关键词命中 L4: 模拟,前四,概率",
+      "route_final": "fast",
+      "downgrade_reason": "precise 不可用，降级到 fast（available=['fast'])"
+    },
+    "iters_used": 1,
+    "final_answer": "根据模拟结果（20000次运行，截至2024年8月20日），英超联赛前四名的归属概率如下（按概率从高到低排列）：\n\n1. **曼城**：99.93%  \n2. **阿森纳**：97.02%  \n3. **利物浦**：93.30%  \n4. **纽卡斯尔**：30.57%  \n\n> **说明**：  \n> - 本模拟基于当前赛季（2024-2025赛季）的赛程和历史数据，通过20000次随机推演生成。  \n> - 纽卡斯尔联队以30.57%的概率位列第四，远高于其他球队（如热刺19.68%、切尔西16.01%）。  \n> - 实际排名可能因后续比赛结果动态调整，但当前模拟显示曼城、阿森纳、利物浦已占据绝对主导地位。  \n\n（数据来源：`simulate_season` 工具，参数：`as_of=2024-08-20, league=E0`）",
+    "n_tools_called": 1,
+    "tool_names": [
+      "simulate_season"
+    ],
+    "inference_summary": {
+      "prompt_tokens": 3397,
+      "completion_tokens": 4288,
+      "latency_ms": 140967,
+      "n_calls": 2
+    },
+    "sources": [],
+    "trace_steps": [
+      {
+        "kind": "planner",
+        "name": "rule_planner",
+        "latency_ms": 0
+      },
+      {
+        "kind": "llm",
+        "name": "qwen3:4b",
+        "latency_ms": 32763
+      },
+      {
+        "kind": "tool",
+        "name": "simulate_season",
+        "latency_ms": 1052
+      },
+      {
+        "kind": "llm",
+        "name": "qwen3:4b",
+        "latency_ms": 108204
+      }
+    ]
+  }
+]

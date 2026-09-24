@@ -63,6 +63,20 @@ fastmcp run mcp_servers/prediction_server.py --transport http --port 8002
 fastmcp run mcp_servers/knowledge_server.py  --transport http --port 8003
 ```
 
+### W6 验证（data 工具 / Planner / ReAct）
+
+```bash
+# 1) 路由评测集 + 规则版/LLM 版分类准确率 + L1-L4 端到端 ReAct
+python data/scripts/build_routing_eval.py            # 生成 100 条 routing.jsonl
+python -m sports_agent.eval.experiment_w6             # 产物：benchmarks/results/w6/
+
+# 2) data_server 四个 SQL 工具直调（不启动 MCP 进程，直查 PostgreSQL）
+python -c "from sports_agent.data.queries import query_standings; print(query_standings('E0','2425')[:3])"
+
+# 3) 单元测试（不依赖 Ollama；DB 不可用时设 SKIP_DB_TESTS=1 跳过 data 工具用例）
+pytest tests/test_agent_w6.py -q
+```
+
 ### Spring AI BFF（W8，最小版）
 
 先启动上面三个 MCP Server（BFF 启动时会初始化连接），再：
@@ -84,7 +98,7 @@ README 与简历中所有性能/质量数字必须来自 `benchmarks/results/` �
 - [x] W3 XGBoost 主模型 + 温度/isotonic 校准 + flat-stake 投注回测（详见 `benchmarks/results/w3/`）
 - [x] W4 蒙特卡洛 + 本地推理双档 + FastAPI（详见 `benchmarks/results/w4/`）
 - [x] W5 bge-m3 + pgvector RAG（详见 `benchmarks/results/w5/`）（recall@5 / 溯源）
-- [ ] W6 三个 MCP Server + Planner + ReAct 端到端
+- [x] W6 三个 MCP Server + Planner + ReAct 端到端（详见 `benchmarks/results/w6/`）（规则版路由准确率、混淆矩阵、L1-L4 端到端 trace）
 - [ ] W7 云 GPU 实测 vLLM AWQ/GPTQ/FP8 + SGLang RadixAttention（预算 ¥50）
 - [ ] W8 Spring AI 最小 BFF（鉴权 + MCP client 调通）
 - [ ] W9 Streamlit trace 可视化 + 预测账本看板
@@ -94,6 +108,7 @@ README 与简历中所有性能/质量数字必须来自 `benchmarks/results/` �
 
 ```
 config/models.yaml        推理后端注册表与层级预算
+                          （Qwen3 默认思考模式，需 max_tokens≥2048 让其思考完后输出答案/tool_calls）
 db/init/                  PostgreSQL 初始化 SQL
 data/{raw,processed,master,scripts}   数据域
 src/sports_agent/

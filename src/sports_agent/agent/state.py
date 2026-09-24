@@ -15,8 +15,8 @@ class TraceStep(TypedDict):
 class AgentState(TypedDict, total=False):
     """LangGraph 在节点间传递的状态。
 
-    注意：当前为骨架版本，工具由固定 LLM 节点占位；
-    W6 将把 answer 节点替换为 bind_tools + ToolNode + 回边的 ReAct 循环。
+    W6 ReAct 循环：planner 决定层级与预算，react 节点在预算内自主调工具。
+    messages 为 OpenAI /v1/chat/completions 的完整对话（含 system / user / assistant / tool 消息）。
     """
 
     query: str
@@ -24,6 +24,10 @@ class AgentState(TypedDict, total=False):
     route: str  # fast / precise
     max_tool_iters: int
     allow_simulation: bool
+    iters_used: int  # 已用工具迭代次数
+    messages: list[dict]  # LLM 上下文（OpenAI 消息格式）
+    tools_available: list[str]  # 当前轮可见工具白名单（按层级裁剪）
     final_answer: str
+    sources: list[dict[str, Any]]  # 引用来源（doc_source / 比赛 id 等）
     trace: list[TraceStep]
-    inference: dict[str, Any]
+    inference: dict[str, Any]  # 汇总推理消耗
