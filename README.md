@@ -113,7 +113,7 @@ README 与简历中所有性能/质量数字必须来自 `benchmarks/results/` �
 - [x] W6 三个 MCP Server + Planner + ReAct 端到端（详见 `benchmarks/results/w6/`）（规则版路由准确率、混淆矩阵、L1-L4 端到端 trace）
 - [ ] W7 云 GPU 实测 vLLM AWQ/GPTQ/FP8 + SGLang RadixAttention（预算 ¥50）
 - [x] W8 Spring AI BFF（鉴权 + 限流 + MCP client + 可观测，5 项烟测通过）
-- [ ] W9 Streamlit trace 可视化 + 预测账本看板
+- [x] W9 Streamlit trace 可视化 + pred_ledger 回填与看板
 - [ ] W10 README 实测数据、演示视频、测试收口
 
 ## 目录结构
