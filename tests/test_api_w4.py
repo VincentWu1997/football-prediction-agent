@@ -1,8 +1,16 @@
 """W4 API 与预测服务集成测试（不依赖 Ollama）。"""
 
+from pathlib import Path
+
+import pytest
 from fastapi.testclient import TestClient
 
 from sports_agent.api.main import app
+
+# predict 相关端点读 data/processed/matches.csv；该文件被 gitignore，
+# CI 干净 checkout 中不存在，此时只跳过依赖数据的用例。
+HAS_DATA = (Path(__file__).parent.parent / "data/processed/matches.csv").exists()
+skip_no_data = pytest.mark.skipif(not HAS_DATA, reason="需要 data/processed/matches.csv")
 
 client = TestClient(app)
 
@@ -24,6 +32,7 @@ def test_inference_status_reports_unreachable_gracefully() -> None:
         assert isinstance(route["reachable"], bool)
 
 
+@skip_no_data
 def test_predict_match_real_data() -> None:
     r = client.post(
         "/predict",
@@ -40,11 +49,13 @@ def test_predict_match_real_data() -> None:
     assert len(mc["top_scores"]) == 5
 
 
+@skip_no_data
 def test_predict_unknown_team_returns_422() -> None:
     r = client.post("/predict", json={"home": "不存在的队", "away": "Liverpool"})
     assert r.status_code == 422
 
 
+@skip_no_data
 def test_simulate_season_real_data() -> None:
     r = client.post(
         "/simulate/season", json={"league": "E0", "as_of": "2026-01-10", "n_runs": 2_000}

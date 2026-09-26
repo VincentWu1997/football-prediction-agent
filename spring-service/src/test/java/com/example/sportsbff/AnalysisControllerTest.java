@@ -3,6 +3,7 @@ package com.example.sportsbff;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpEntity;
@@ -11,12 +12,17 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import com.example.sportsbff.data.PredictionRepository;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.when;
 
 /**
  * BFF 端点烟测：健康检查、鉴权、限流、预测账本。
  *
- * <p>不依赖 Python runtime（/api/analyze 会连接失败，只验证鉴权/路由层）。
+ * <p>不依赖 Python runtime（/api/analyze 会连接失败，只验证鉴权/路由层）；
+ * PredictionRepository 被 mock，CI 无需 PostgreSQL。
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = {
@@ -25,6 +31,10 @@ import static org.assertj.core.api.Assertions.assertThat;
                 "spring.ai.mcp.client.initialized=false"
         })
 class AnalysisControllerTest {
+
+    /** 用 mock 替换账本查询，避免测试环境直连 PostgreSQL。 */
+    @MockitoBean
+    PredictionRepository ledger;
 
     @LocalServerPort
     int port;
@@ -47,6 +57,8 @@ class AnalysisControllerTest {
 
     @Test
     void predictionsWithKeyReturns200() {
+        // stub 账本查询返回空列表，不触发真实 JDBC 连接
+        when(ledger.recent(anyInt())).thenReturn(java.util.List.of());
         var headers = new HttpHeaders();
         headers.set("X-API-Key", "demo-key-001");
         var resp = rest.exchange(url("/api/predictions"), HttpMethod.GET,
