@@ -6,15 +6,21 @@
 
 ## 架构一览
 
-```
-Streamlit ── Spring AI BFF(最小版) ── FastAPI Agent Runtime
-                                        │
-   Planner(L1-L4+预算) → ReAct Tool Loop (LangGraph)
-                                        │
-        MCP: 数据查询 │ MCP: 预测 │ MCP: 知识检索
-                                        │
-              PostgreSQL 16 + pgvector
-   统一推理客户端(OpenAI 兼容): Ollama(本地) / vLLM·SGLang(云端)
+```mermaid
+graph TB
+    UI[Streamlit 前端<br/>对话 / Trace 可视化 / 账本看板] --> BFF["Spring AI BFF :8080<br/>API Key 鉴权 + 令牌桶限流"]
+    BFF --> RT[FastAPI Agent Runtime :9000]
+    RT --> P["Planner（规则 1.000 / LLM 0.857）<br/>L1-L4 分层 + 推理预算"]
+    P --> R[ReAct 工具循环<br/>LangGraph bind_tools + 回边]
+    R --> M1["MCP 数据查询 :8001<br/>积分榜/近况/H2H/赔率"]
+    R --> M2["MCP 预测 :8002<br/>Dixon-Coles + 蒙特卡洛"]
+    R --> M3["MCP 知识检索 :8003<br/>bge-m3 + pgvector RAG"]
+    M1 --> PG[(PostgreSQL 16 + pgvector)]
+    M2 --> PG
+    M3 --> PG
+    RT --> INF[统一推理客户端<br/>OpenAI 兼容 / 路由降级]
+    INF --> OL[Ollama 本地<br/>qwen3:4b / qwen3:8b]
+    INF --> VLLM[云端 vLLM / SGLang<br/>AWQ / GPTQ / FP8]
 ```
 
 ## 环境要求
@@ -103,6 +109,67 @@ cd spring-service && mvn spring-boot:run
 
 README 与简历中所有性能/质量数字必须来自 `benchmarks/results/` 中的实验产物（原始 CSV/JSON + 生成图表的脚本），禁止手填目标值；没有数据的位置写"未测"。引用论文数字须标注来源。
 
+## 实测结果汇总（全部引自 benchmarks/results/ 原始产物）
+
+| 实验 | 指标 | 实测值 | 产物 |
+|---|---|---|---|
+| W2 赔率去水 baseline（Pinnacle） | LogLoss，walk-forward 11,601 场五大联赛 | **0.9712**（RPS 0.1958，准确率 53.6%） | [w2/model_comparison.csv](benchmarks/results/w2/model_comparison.csv) |
+| W2 Dixon-Coles | LogLoss，同上 | 1.0019 | 同上 |
+| W2 ELO | LogLoss，同上 | 1.0755 | 同上 |
+| W3 XGBoost + 温度校准 | LogLoss，同上 | **0.9884**（未超赔率 baseline） | [w3/model_comparison.csv](benchmarks/results/w3/model_comparison.csv) |
+| W3 flat-stake 投注回测 | ROI（edge≥0.02，10,795 注） | **-1.9%**（与市场有效假说一致，正 ROI 仅存在于个别联赛×赛季切片，如 E0/1920 +10.6%） | [w3/backtest_summary.csv](benchmarks/results/w3/backtest_summary.csv) |
+| W4 DC 解析解 vs 蒙特卡洛 | 主胜概率（50,000 次采样） | 0.3355 vs 0.3366（一致性校验） | [w4/single_match_demo.json](benchmarks/results/w4/single_match_demo.json) |
+| W5 RAG 问答 | 准确率（n=20） | **RAG 0.65 vs 无 RAG 0.05** | [w5/qa_summary.csv](benchmarks/results/w5/qa_summary.csv) |
+| W5 检索质量 | recall@5（n=80） | 0.0125 ⚠️ Ollama bge-m3 常量向量 bug（详见下注） | [w5/retrieval_metrics.csv](benchmarks/results/w5/retrieval_metrics.csv) |
+| W6 规则路由 | Accuracy（100 条评测集） | **1.000**（macro-F1 1.000，延迟 <1ms） | [w6/routing_metrics.csv](benchmarks/results/w6/routing_metrics.csv) |
+| W6 LLM 路由 | Accuracy（28 条抽样） | 0.857（平均延迟 51.1s，qwen3:4b 本地） | 同上 |
+| W7 云 GPU（vLLM/SGLang 量化与服务化） | 延迟 / 吞吐 / 显存 | **未测**——脚本已就绪（[deploy/cloud/](deploy/cloud/)），待租机执行 | 预计 `benchmarks/results/w7/` |
+| W8 Spring AI BFF | 烟测 | 5/5 通过（health/鉴权/限流/透传/账本） | 本 README W8 节 |
+| 全仓测试 | pytest | 79 passed | `tests/` |
+
+> ⚠️ W5 说明：检索召回率异常低的根因是 Ollama 0.34.2 的 bge-m3 返回常量向量（RAG 问答仍靠关键词兜底命中 0.65），修复追踪见方案文档 §5.4；该数字如实保留作为已知缺陷记录。
+
+## 复现命令
+
+```bash
+# W1 数据管道（当前库含 20,013 场，覆盖 1516–2627 赛季至 2026-09-20）
+python data/scripts/fetch_csv.py --leagues E0 SP1 D1 I1 F1 \
+  --seasons 1516 1617 1718 1819 1920 2021 2122 2223 2324 2425 2526 2627
+python data/scripts/normalize.py && python data/scripts/load_pg.py
+
+# W2/W3 模型对比与投注回测
+python -m sports_agent.eval.experiment     # → benchmarks/results/w2/
+python -m sports_agent.eval.experiment_w3  # → benchmarks/results/w3/
+
+# W4 蒙特卡洛（单场 demo + 赛季模拟）
+python -m sports_agent.eval.experiment_w4   # → benchmarks/results/w4/
+
+# W5 RAG 评测（需 pgvector 容器与 bge-m3）
+python -m sports_agent.eval.experiment_w5   # → benchmarks/results/w5/
+
+# W6 路由评测 + ReAct 端到端
+python data/scripts/build_routing_eval.py
+python -m sports_agent.eval.experiment_w6   # → benchmarks/results/w6/
+
+# W7 云 GPU 实测（AutoDL RTX 4090，约 ¥5–12/2–4h）
+bash deploy/cloud/run_all.sh                # E2 量化对比 + E3 并发网格 + E4 SGLang 对照
+python -m sports_agent.eval.experiment_w7 summarize   # 云端产物解析汇总（本机执行）
+
+# 全部测试
+pytest -q                                   # 无 DB 环境：SKIP_DB_TESTS=1 pytest -q
+```
+
+## 演示视频脚本（3 分钟，L1→L4）
+
+| 时间 | 画面 | 讲解要点 |
+|---|---|---|
+| 0:00–0:20 | README 架构图 | 一句话定位：按复杂度分配推理预算的足球预测 Agent；预测由可回测统计模型给出，LLM 只做聚合与解释 |
+| 0:20–0:50 | Streamlit 问"英超积分榜" | 右栏 trace：规则 Planner 秒级路由 L1 → 调 query_standings → 引用最新赛季数据；强调 0 大模型调用 |
+| 0:50–1:30 | 问"曼联对利物浦谁会赢" | L2：强制先调 predict_match；trace 可见 Dixon-Coles 解析概率 + 蒙特卡洛 5 万次采样置信区间；概率来自可回测模型而非 LLM 编造 |
+| 1:30–2:10 | 问"详细分析双红会" | L3：search_knowledge 带文档溯源； trace 展示多轮工具循环与 token 消耗 |
+| 2:10–2:40 | 问"模拟本赛季英超前四概率" | L4：simulate_season 双循环推断剩余赛程做蒙特卡洛，输出夺冠/前四/降级概率分布 |
+| 2:40–3:00 | 底栏账本看板 + W2/W3 结果表 | pred_ledger 记录每条预测并回填结算（LogLoss/Brier/RPS）；投注回测诚实呈现负 ROI；一图收尾"每个数字都有产物" |
+
 ## 十周路线图（12–15h/周）
 
 - [x] W1 数据管道 + EDA（19,763 场已入库，详见 `data/processed/eda_report.txt`）
@@ -114,7 +181,7 @@ README 与简历中所有性能/质量数字必须来自 `benchmarks/results/` �
 - [ ] W7 云 GPU 实测 vLLM AWQ/GPTQ/FP8 + SGLang RadixAttention（预算 ¥50）
 - [x] W8 Spring AI BFF（鉴权 + 限流 + MCP client + 可观测，5 项烟测通过）
 - [x] W9 Streamlit trace 可视化 + pred_ledger 回填与看板
-- [ ] W10 README 实测数据、演示视频、测试收口
+- [x] W10 README 实测表/架构图/复现命令/演示脚本收口 + GitHub Actions CI（W7 数字待云机实测后回填）
 
 ## 目录结构
 
