@@ -28,7 +28,9 @@ import static org.mockito.Mockito.when;
         properties = {
                 "bff.api-keys=demo-key-001",
                 "bff.python-runtime-url=http://localhost:1",
-                "spring.ai.mcp.client.initialized=false"
+                "spring.ai.mcp.client.initialized=false",
+                // CI 无 PostgreSQL：关闭数据源健康探针，否则 /actuator/health 返回 503
+                "management.health.db.enabled=false"
         })
 class AnalysisControllerTest {
 
