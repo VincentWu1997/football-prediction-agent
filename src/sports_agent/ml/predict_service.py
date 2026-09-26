@@ -147,7 +147,12 @@ def predict_match(
 
 
 def season_state(league: str, as_of: str) -> dict:
-    """切分某联赛某赛季：as_of 前为已赛（积分榜），之后为剩余赛程。"""
+    """切分某联赛某赛季：as_of 前为已赛（积分榜），之后为剩余赛程。
+
+    剩余赛程按双循环规则推断（每对球队各自主场交手一次），而不是从
+    CSV 里捞 as_of 之后的行——football-data.co.uk 只发布已赛结果，
+    进行中的赛季在 CSV 里没有未来赛程，按日期切会得到 0 场剩余比赛。
+    """
     df = load_matches()
     lg = df[df["league"] == league]
     season = lg[lg["match_date"] < pd.Timestamp(as_of)]["season"].max()
@@ -155,9 +160,14 @@ def season_state(league: str, as_of: str) -> dict:
         raise ValueError(f"{league} 在 {as_of} 前没有比赛")
     in_season = lg[lg["season"] == season]
     played = in_season[in_season["match_date"] < pd.Timestamp(as_of)]
-    remaining = in_season[in_season["match_date"] >= pd.Timestamp(as_of)]
 
     teams = sorted(set(in_season["home_team"]) | set(in_season["away_team"]))
+    played_pairs = set(zip(played["home_team"], played["away_team"], strict=True))
+    fixtures = [(a, b) for a in teams for b in teams if a != b and (a, b) not in played_pairs]
+    # 赛季在库中是否完整：380 个主客组合（20 队双循环）是否全覆盖。
+    # 完整赛季才有"真实最终排名"可供回看校验；进行中赛季没有。
+    in_season_pairs = set(zip(in_season["home_team"], in_season["away_team"], strict=True))
+    season_complete = len(in_season_pairs) == len(teams) * (len(teams) - 1)
     points, gd, gf = {}, {}, {}
     for row in played.itertuples(index=False):
         points[row.home_team] = points.get(row.home_team, 0) + (
@@ -177,12 +187,15 @@ def season_state(league: str, as_of: str) -> dict:
         "as_of": as_of,
         "teams": teams,
         "n_played": len(played),
-        "n_remaining": len(remaining),
+        "n_remaining": len(fixtures),
+        "season_complete": season_complete,
         "current_points": points,
         "current_gd": gd,
         "current_gf": gf,
-        "fixtures": list(zip(remaining["home_team"], remaining["away_team"], strict=True)),
-        "actual_final_order": _actual_final_order(in_season),
+        "fixtures": fixtures,
+        # 真实最终排名仅在赛季完整时提供（供 W4 回看校验）；
+        # 进行中赛季返回 None，避免下游把当前积分榜误当"最终排名"引用
+        "actual_final_order": _actual_final_order(in_season) if season_complete else None,
     }
 
 
@@ -229,6 +242,7 @@ def simulate_season(
         "n_runs": sim.n_runs,
         "n_played": state["n_played"],
         "n_remaining": state["n_remaining"],
+        "season_complete": state["season_complete"],
         "title": sim.title,
         "top4": sim.top4,
         "relegation": sim.relegation,

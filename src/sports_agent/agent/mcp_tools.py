@@ -149,7 +149,9 @@ _spec(
     "simulate_season",
     _local_simulate_season,
     "L4：对某联赛赛季剩余赛程做蒙特卡洛（夺冠/前四/降级概率）。"
-    "league 为代码，as_of 为 YYYY-MM-DD（赛季进行中某天），n_runs 默认 20000。",
+    "league 为代码，as_of 为 YYYY-MM-DD（赛季进行中某天，通常传今天），n_runs 默认 20000。"
+    "返回 title/top4/relegation 概率与 expected_points；"
+    "n_remaining 为模拟的剩余场次，actual_final_order 仅在赛季完赛时非空。",
 )
 _spec(
     "search_knowledge",
